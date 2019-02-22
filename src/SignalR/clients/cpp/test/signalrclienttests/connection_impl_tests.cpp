@@ -111,6 +111,28 @@ TEST(connection_impl_start, connection_state_is_disconnected_when_connection_can
     ASSERT_EQ(connection->get_connection_state(), connection_state::disconnected);
 }
 
+TEST(connection_impl_start, throws_for_invalid_uri)
+{
+    std::shared_ptr<log_writer> writer(std::make_shared<memory_log_writer>());
+
+    auto websocket_client = create_test_websocket_client(
+        /* receive function */ []() { return pplx::task_from_result(std::string("{ }\x1e")); });
+
+    auto connection = connection_impl::create(_XPLATSTR("/bad_uri?a=b"), trace_level::errors, writer, create_test_web_request_factory(), std::make_unique<test_transport_factory>(websocket_client));
+
+    try
+    {
+        connection->start().get();
+        ASSERT_TRUE(false);
+    }
+    catch (...)
+    {
+        // We shouldn't check the exact exception as it would be specific to the http library being used
+    }
+
+    ASSERT_EQ(connection->get_connection_state(), connection_state::disconnected);
+}
+
 TEST(connection_impl_start, start_sets_id_query_string)
 {
     std::shared_ptr<log_writer> writer(std::make_shared<memory_log_writer>());
@@ -1190,7 +1212,7 @@ TEST(connection_impl_stop, ongoing_start_request_canceled_if_connection_stopped_
         auto response_body =
             url.path() == _XPLATSTR("/negotiate")
             ? _XPLATSTR("{ \"connectionId\" : \"f7707523-307d-4cba-9abf-3eef701241e8\", ")
-              _XPLATSTR("\"availableTransports\" : [] }")
+              _XPLATSTR("\"availableTransports\" : [ { \"transport\": \"WebSockets\", \"transferFormats\": [ \"Text\", \"Binary\" ] } ] }")
             : _XPLATSTR("");
 
         return std::unique_ptr<web_request>(new web_request_stub((unsigned short)200, _XPLATSTR("OK"), response_body));
