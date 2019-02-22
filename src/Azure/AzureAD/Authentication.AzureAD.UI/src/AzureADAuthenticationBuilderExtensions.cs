@@ -113,11 +113,11 @@ namespace Microsoft.AspNetCore.Authentication
 
             builder.Services.Configure(TryAddOpenIDCookieSchemeMappings(scheme, openIdConnectScheme, cookieScheme));
 
-            builder.Services.TryAddSingleton<IConfigureOptions<AzureADOptions>, AzureADOptionsConfiguration>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<AzureADOptions>, AzureADOptionsConfiguration>());
 
-            builder.Services.TryAddSingleton<IConfigureOptions<OpenIdConnectOptions>, AzureADOpenIdConnectOptionsConfiguration>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<OpenIdConnectOptions>, AzureADOpenIdConnectOptionsConfiguration>());
 
-            builder.Services.TryAddSingleton<IConfigureOptions<CookieAuthenticationOptions>, AzureADCookieOptionsConfiguration>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<CookieAuthenticationOptions>, AzureADCookieOptionsConfiguration>());
 
             builder.Services.Configure(scheme, configureOptions);
 
